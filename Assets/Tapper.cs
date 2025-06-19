@@ -1,16 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Tapper : MonoBehaviour
 {
-    private Animator _anim;          // Animatorへの参
-    [SerializeField]private AudioController _audio;
+    private Animator _anim;
+    //[SerializeField] private GameObject _lineObj;
+    //private LineRenderer _lr;
+
+    [SerializeField] private Material _notSel;
+    [SerializeField] private Material _sel;
+
+    [SerializeField] private Renderer _sp1;
+    [SerializeField] private Renderer _sp2;
+    [SerializeField] private Renderer _sp3;
+    [SerializeField] private Renderer _sp4;
+    
+    [SerializeField] private AudioController _audio;
     private int _tapCounter = 0;
     // Start is called before the first frame update
     void Start()
     {
-        _anim = GetComponent<Animator> ();
+        _anim = GetComponent<Animator>();
+        //_lr = _lineObj.AddComponent<LineRenderer>();
     }
 
     // Update is called once per frame
@@ -20,28 +33,31 @@ public class Tapper : MonoBehaviour
 		{
             Debug.Log("InRay");
 			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit = new RaycastHit();
-            if(Physics.Raycast(ray, out hit))
+            RaycastHit[] hits = Physics.RaycastAll(ray);
+
+            if (hits != null)
             {
-                Debug.Log("InRay2");
-                if (hit.transform.gameObject.CompareTag("UniChan"))
+                Array.Sort(hits, (x, y) => x.distance.CompareTo(y.distance));
+                foreach (RaycastHit hit in hits)
                 {
-                    Debug.Log("InUni");
-                    _tapCounter++;
-                    switch (_tapCounter % 3)
+                    if (hit.transform.gameObject.CompareTag("ball"))
                     {
-                        case 0:
-                            _anim.SetTrigger("Yatta");
-                            _audio.PlayYatta();
+                        Debug.Log("Inball");
+                        Renderer hitRenderer = hit.collider.GetComponent<Renderer>();
+                        if (hitRenderer.sharedMaterial == _sel)
+                        {
+                            hitRenderer.material = _notSel;
+                            continue;
+                        }
+                        else
+                        {
+                            _sp1.material = _notSel;       
+                            _sp2.material = _notSel;       
+                            _sp3.material = _notSel;       
+                            _sp4.material = _notSel;   
+                            hitRenderer.material = _sel;
                             break;
-                        case 1:
-                            _anim.SetTrigger("Yaho");
-                            _audio.PlayYaho();
-                            break;
-                        case 2:
-                            _anim.SetTrigger("Jump");
-                            _audio.PlayJump();
-                            break;
+                        }
                     }
                 }
             }
